@@ -30,5 +30,4 @@ string spreadsheetId = "1l4KUKQ0e5HKB35doSRcaF3QgNYvBAp99q_l5GS3J1B8";
 public function insertDetails(Details details) returns error? {
     error? append = check spreadsheetClient->appendRowToSheet(spreadsheetId, details.sheet.toString(), 
                                                     [details.number, details.action, details.url, details.title, details.time, details.user]);
-
 }
