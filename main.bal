@@ -6,7 +6,7 @@ import ballerina/io;
         "https://api.github.com/hub", 
         "https://github.com/TharushiJay/helloworld/events/*.json" // Set the path to your Github repository
     ],
-    callback: "https://b3e0–112–134–171–11.ngrok.io", // Set the ngrok callback URL 
+    callback: "https://6671-2402-d000-811c-7b4a-18dd-31bd-21f7-f9b2.ngrok.io", // Set the ngrok callback URL 
     httpConfig: {
         auth: {
             token: "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" // Set your GitHub Personal Access Token (PAT)
@@ -14,28 +14,31 @@ import ballerina/io;
     }
 }
 service /events on new websub:Listener(9090) {
-    remote function onEventNotification(websub:ContentDistributionMessage event) 
-                        returns error? {
+    remote function onEventNotification(websub:ContentDistributionMessage event) returns error? {
+
         var retrievedContent = event.content;
+
         if (retrievedContent is json) {
             if (retrievedContent.action is string){
+
+                Details details = { number: check retrievedContent.issue.number,
+                                    action: check retrievedContent.action,
+                                    url: check retrievedContent.issue.url,
+                                    title: check retrievedContent.issue.title,
+                                    time: check retrievedContent.issue.updated_at,
+                                    user: check retrievedContent.sender.login };
+
                 if (retrievedContent.issue is json) {
+
                     // If the event is related to an Issue
-                    error? issueResponse = insertIssueDetails(retrievedContent.issue.number, 
-                                                    retrievedContent.action,
-                                                    retrievedContent.issue.url,
-                                                    retrievedContent.issue.title,
-                                                    retrievedContent.issue.updated_at,
-                                                    retrievedContent.sender.login);
-                }
-                else if (retrievedContent.pull_request is json) {
+                    details.sheet = "Issue";
+                    error? response = insertDetails(details);
+
+                } else if (retrievedContent.pull_request is json) {
+                    
                     // If the event is related to a Pull Request
-                    error? pullRequestResponse = insertPRDetails(retrievedContent.number, 
-                                                    retrievedContent.action,
-                                                    retrievedContent.pull_request.url,
-                                                    retrievedContent.pull_request.title,
-                                                    retrievedContent.pull_request.updated_at,
-                                                    retrievedContent.pull_request.user.login);
+                    details.sheet = "PR";
+                    error? response = insertDetails(details);
                 }
             }
         } else {
